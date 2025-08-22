@@ -1,5 +1,5 @@
 # Use the official Playwright image with all browsers preinstalled
-FROM mcr.microsoft.com/playwright:v1.46.0-jammy
+FROM mcr.microsoft.com/playwright:v1.55.0-jammy
 
 # Set working directory
 WORKDIR /app
@@ -17,3 +17,4 @@ EXPOSE 8080
 
 # Start the server
 CMD ["npm", "start"]
+
