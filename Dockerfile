@@ -1,0 +1,19 @@
+# Use the official Playwright image with all browsers preinstalled
+FROM mcr.microsoft.com/playwright:v1.46.0-jammy
+
+# Set working directory
+WORKDIR /app
+
+# Copy package.json first and install deps
+COPY package.json ./
+RUN npm ci || npm install
+
+# Copy the rest
+COPY . .
+
+# Environment
+ENV PORT=8080
+EXPOSE 8080
+
+# Start the server
+CMD ["npm", "start"]
