@@ -1,4 +1,4 @@
-# Use the official Playwright image with all browsers preinstalled
+# Use the official Playwright image with the latest browsers preinstalled
 FROM mcr.microsoft.com/playwright:v1.55.0-jammy
 
 # Set working directory
@@ -8,13 +8,12 @@ WORKDIR /app
 COPY package.json ./
 RUN npm ci || npm install
 
-# Copy the rest
+# Copy the rest of the code
 COPY . .
 
-# Environment
+# Expose the correct port
 ENV PORT=8080
 EXPOSE 8080
 
 # Start the server
 CMD ["npm", "start"]
-
