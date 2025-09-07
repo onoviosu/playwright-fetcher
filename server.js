@@ -15,7 +15,7 @@ app.get('/healthz', (req, res) => {
 
 // Fetch endpoint
 app.post('/fetch', async (req, res) => {
-  const { url, waitUntil = 'domcontentloaded', timeoutMs = 60000, locale = 'en-US' } = req.body || {};
+  const { url, timeoutMs = 90000, locale = 'en-US' } = req.body || {};
   if (!url) return res.status(400).json({ error: 'Missing url' });
 
   let browser;
@@ -27,7 +27,7 @@ app.post('/fetch', async (req, res) => {
         '--no-sandbox',
         '--disable-dev-shm-usage',
         '--disable-blink-features=AutomationControlled',
-        '--disable-http2'
+        '--disable-http2',
       ],
     });
 
@@ -46,19 +46,25 @@ app.post('/fetch', async (req, res) => {
       Object.defineProperty(navigator, 'webdriver', { get: () => false });
     });
 
-    // Navigate
-    const resp = await page.goto(url, { waitUntil, timeout: timeoutMs });
+    // Navigate (with networkidle + fallback)
+    let resp;
+    try {
+      resp = await page.goto(url, { waitUntil: 'networkidle', timeout: timeoutMs });
+    } catch (err) {
+      console.warn('Timeout reached, returning partial content');
+    }
 
     // Scroll a bit to trigger lazy-loaded content
     await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight / 3));
     await page.waitForTimeout(500);
 
     // Return structured response
+    const html = await page.content();
     res.json({
-      status: resp.status(),
+      status: resp ? resp.status() : 408,
       finalUrl: page.url(),
-      htmlLength: (await page.content()).length,
-      html: await page.content(),
+      htmlLength: html.length,
+      html,
     });
   } catch (err) {
     console.error('Fetcher error:', err);
