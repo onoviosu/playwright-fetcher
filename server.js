@@ -46,20 +46,24 @@ app.post('/fetch', async (req, res) => {
       Object.defineProperty(navigator, 'webdriver', { get: () => false });
     });
 
-    // Navigate (with networkidle + fallback)
+    // Navigate
     let resp;
     try {
-      resp = await page.goto(url, { waitUntil: 'networkidle', timeout: timeoutMs });
+      resp = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: timeoutMs });
+      // Wait specifically for BizBuySell listing cards to appear
+      await page.waitForSelector('.listing-card', { timeout: 30000 });
     } catch (err) {
-      console.warn('Timeout reached, returning partial content');
+      console.warn('Timeout or selector not found, returning partial content');
     }
 
     // Scroll a bit to trigger lazy-loaded content
     await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight / 3));
     await page.waitForTimeout(500);
 
-    // Return structured response
+    // Grab page HTML
     const html = await page.content();
+
+    // Return structured response
     res.json({
       status: resp ? resp.status() : 408,
       finalUrl: page.url(),
